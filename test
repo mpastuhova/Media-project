@@ -1,0 +1,702 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REFLECT — An Animated Story</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+
+:root {
+  --ink: #202033;
+  --paper: #fff8ec;
+  --purple: #8066e9;
+  --pink: #ff91ae;
+  --yellow: #ffdc72;
+  --blue: #8bd9e9;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #171728;
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+#player {
+  width: min(1100px, 96vw);
+  aspect-ratio: 16 / 9;
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow: 0 25px 100px #0008;
+}
+.scene {
+  position: absolute;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  background: var(--paper);
+}
+.scene.active { display: block; }
+.scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .13;
+  pointer-events: none;
+  background-image: radial-gradient(#8d7b6c 1px, transparent 1px);
+  background-size: 19px 19px;
+}
+.floor {
+  position: absolute;
+  bottom: 0;
+  height: 15%;
+  width: 100%;
+  background: #e8dfd2;
+  border-top: 3px solid var(--ink);
+}
+h1,h2,p { margin: 0; }
+.title {
+  font: 700 clamp(35px, 6vw, 75px)/.98 'Space Grotesk', sans-serif;
+  letter-spacing: -3px;
+}
+.subtitle {
+  font-size: clamp(13px, 1.8vw, 20px);
+  line-height: 1.5;
+  margin-top: 20px;
+}
+.tag {
+  display: inline-block;
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  border-radius: 30px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+.content {
+  position: absolute;
+  top: 13%;
+  left: 9%;
+  z-index: 4;
+  max-width: 55%;
+}
+.center {
+  text-align: center;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  max-width: 800px;
+}
+.highlight { color: var(--purple); }
+.pink { color: #e45b89; }
+
+/* Cartoon characters */
+.character {
+  position: absolute;
+  width: 125px;
+  height: 215px;
+  bottom: 13%;
+  z-index: 3;
+  transform-origin: bottom center;
+}
+.person { left: 24%; }
+.person.right { left: auto; right: 20%; }
+.head {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  top: 0;
+  left: 12px;
+  border: 4px solid var(--ink);
+  border-radius: 48% 48% 45% 45%;
+  background: #ffd1b6;
+  z-index: 2;
+}
+.hair {
+  position: absolute;
+  width: 100px;
+  height: 40px;
+  top: -5px;
+  left: 12px;
+  background: #343044;
+  border: 4px solid var(--ink);
+  border-radius: 50% 50% 15% 15%;
+  z-index: 3;
+}
+.eye {
+  position: absolute;
+  width: 7px;
+  height: 11px;
+  background: var(--ink);
+  border-radius: 50%;
+  top: 43px;
+}
+.eye.left { left: 31px; }
+.eye.right { right: 27px; }
+.mouth {
+  position: absolute;
+  width: 22px;
+  height: 11px;
+  border-bottom: 3px solid var(--ink);
+  border-radius: 50%;
+  left: 37px;
+  top: 65px;
+}
+.body {
+  position: absolute;
+  top: 95px;
+  left: 15px;
+  width: 95px;
+  height: 85px;
+  border: 4px solid var(--ink);
+  border-radius: 30px 30px 15px 15px;
+  background: var(--purple);
+}
+.arm {
+  position: absolute;
+  top: 110px;
+  width: 18px;
+  height: 75px;
+  border: 4px solid var(--ink);
+  background: #ffd1b6;
+  border-radius: 20px;
+  transform-origin: top center;
+}
+.arm.left { left: 4px; transform: rotate(25deg); }
+.arm.right { right: 2px; transform: rotate(-25deg); }
+.leg {
+  position: absolute;
+  top: 172px;
+  width: 19px;
+  height: 43px;
+  border: 4px solid var(--ink);
+  background: #343044;
+  border-radius: 10px;
+}
+.leg.left { left: 34px; }
+.leg.right { right: 32px; }
+
+/* Robot */
+.robot {
+  position: absolute;
+  width: 145px;
+  height: 190px;
+  bottom: 15%;
+  right: 23%;
+  z-index: 3;
+  animation: robotFloat 3s ease-in-out infinite;
+}
+.robot-head {
+  position: absolute;
+  width: 120px;
+  height: 100px;
+  left: 12px;
+  top: 0;
+  border: 4px solid var(--ink);
+  border-radius: 27px;
+  background: var(--blue);
+}
+.robot-eye {
+  position: absolute;
+  top: 35px;
+  width: 13px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.robot-eye.one { left: 30px; }
+.robot-eye.two { right: 30px; }
+.robot-mouth {
+  position: absolute;
+  width: 35px;
+  height: 10px;
+  border-bottom: 4px solid var(--ink);
+  left: 39px;
+  top: 65px;
+  border-radius: 50%;
+}
+.robot-body {
+  position: absolute;
+  width: 90px;
+  height: 65px;
+  background: var(--purple);
+  border: 4px solid var(--ink);
+  border-radius: 20px;
+  left: 27px;
+  top: 103px;
+}
+.antenna {
+  position: absolute;
+  top: -26px;
+  left: 67px;
+  height: 30px;
+  width: 5px;
+  background: var(--ink);
+}
+.antenna::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: -6px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--pink);
+  border: 3px solid var(--ink);
+}
+.robot-arm {
+  position: absolute;
+  width: 15px;
+  height: 55px;
+  top: 108px;
+  background: var(--blue);
+  border: 4px solid var(--ink);
+  border-radius: 20px;
+}
+.robot-arm.a { left: 10px; transform: rotate(35deg); }
+.robot-arm.b { right: 8px; transform: rotate(-35deg); }
+
+.bubble {
+  position: absolute;
+  background: white;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  padding: 15px 18px;
+  max-width: 230px;
+  font-size: clamp(12px, 1.4vw, 16px);
+  font-weight: 700;
+  line-height: 1.4;
+  z-index: 5;
+  box-shadow: 4px 5px 0 var(--ink);
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -12px;
+  left: 35px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-right: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink);
+  transform: rotate(45deg);
+}
+.bubble.top { bottom: 65%; left: 15%; }
+.bubble.robot-bubble { bottom: 67%; right: 12%; }
+.bubble.center-bubble {
+  bottom: 55%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 330px;
+  text-align: center;
+}
+
+/* Speech / captions */
+.caption {
+  position: absolute;
+  z-index: 10;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  text-align: center;
+  font-size: clamp(15px, 2vw, 22px);
+  font-weight: 700;
+  line-height: 1.4;
+  background: white;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 13px 20px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.caption strong { color: var(--purple); }
+
+/* Visual metaphors */
+.question {
+  font: 700 clamp(70px, 12vw, 140px) 'Space Grotesk';
+  color: var(--purple);
+  position: absolute;
+  right: 14%;
+  top: 28%;
+  animation: pulse 2s infinite;
+}
+.floating-word {
+  position: absolute;
+  border: 3px solid var(--ink);
+  background: var(--yellow);
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 800;
+  box-shadow: 4px 4px 0 var(--ink);
+  animation: drift 3s ease-in-out infinite alternate;
+}
+.word1 { top: 25%; left: 12%; transform: rotate(-8deg); }
+.word2 { top: 40%; right: 10%; background: var(--pink); animation-delay: -1s; }
+.word3 { bottom: 28%; left: 38%; background: var(--blue); animation-delay: -2s; }
+
+.mirror {
+  position: absolute;
+  left: 50%;
+  top: 23%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 235px;
+  border: 8px solid var(--ink);
+  border-radius: 48% 48% 15% 15%;
+  background: linear-gradient(135deg,#d9caff,#b9e8ef);
+  box-shadow: 12px 12px 0 var(--purple);
+}
+.mirror::after {
+  content: "YOU";
+  position: absolute;
+  bottom: 18px;
+  width: 100%;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+.mirror-face {
+  position: absolute;
+  left: 48px;
+  top: 60px;
+  width: 65px;
+  height: 85px;
+  border: 4px solid var(--ink);
+  border-radius: 50%;
+  background: #ffd1b6;
+}
+.mirror-face::after {
+  content: "•  •";
+  position: absolute;
+  top: 24px;
+  left: 12px;
+  font-size: 22px;
+  letter-spacing: 8px;
+}
+.loop {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 700 clamp(24px, 4vw, 48px) 'Space Grotesk';
+  text-align: center;
+  width: 85%;
+}
+.loop-arrow {
+  position: absolute;
+  font-size: 65px;
+  color: var(--purple);
+  animation: spin 8s linear infinite;
+  top: 45%;
+  left: 45%;
+}
+
+/* Scene transitions */
+.active .enter {
+  animation: enter .8s cubic-bezier(.2,.8,.2,1) both;
+}
+.active .pop {
+  animation: pop .6s cubic-bezier(.2,1.5,.5,1) both;
+}
+.active .wave {
+  animation: wave 1s ease-in-out infinite alternate;
+}
+@keyframes enter {
+  from { opacity: 0; transform: translateY(35px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop {
+  0% { opacity: 0; transform: scale(.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes wave {
+  from { transform: rotate(-8deg); }
+  to { transform: rotate(10deg); }
+}
+@keyframes robotFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-13px); }
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.13) rotate(5deg); }
+}
+@keyframes drift {
+  from { translate: 0 0; }
+  to { translate: 0 -18px; }
+}
+@keyframes spin {
+  to { rotate: 360deg; }
+}
+
+/* Controls */
+.controls {
+  width: min(1100px, 96vw);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 5px;
+  color: white;
+}
+.controls button {
+  background: transparent;
+  color: white;
+  border: 1px solid #ffffff55;
+  border-radius: 30px;
+  padding: 8px 16px;
+  font-weight: 700;
+}
+.controls button:hover { background: #ffffff20; }
+#progress {
+  height: 5px;
+  background: #ffffff30;
+  flex: 1;
+  border-radius: 10px;
+  overflow: hidden;
+}
+#bar {
+  height: 100%;
+  width: 0%;
+  background: var(--pink);
+  transition: width .2s linear;
+}
+#counter {
+  font: 12px 'DM Sans';
+  color: #c9c8d6;
+  min-width: 55px;
+  text-align: right;
+}
+@media(max-width:600px) {
+  nav { padding: 15px; }
+  .nav-links { display: none; }
+  .character { transform: scale(.75); }
+  .person { left: 12%; }
+  .robot { right: 10%; transform: scale(.8); }
+  .content { max-width: 80%; }
+  .bubble { max-width: 160px; }
+}
+</style>
+</head>
+<body>
+
+<div id="player">
+
+  <!-- SCENE 1: INTRO -->
+  <div class="scene active" data-duration="6500">
+    <div class="content enter">
+      <div class="tag">A STORY ABOUT US AND AI</div>
+      <h1 class="title">We made<br>something<br><span class="highlight">intelligent.</span></h1>
+      <p class="subtitle">But did we make something fair?</p>
+    </div>
+    <div class="robot pop">
+      <div class="antenna"></div>
+      <div class="robot-head"><div class="robot-eye one"></div><div class="robot-eye two"></div><div class="robot-mouth"></div></div>
+      <div class="robot-body"></div><div class="robot-arm a"></div><div class="robot-arm b"></div>
+    </div>
+    <div class="bubble robot-bubble enter">Hello, human! I know everything. Probably.</div>
+    <div class="caption">Meet AI. Our very clever creation. <strong>Emphasis on creation.</strong></div>
+  </div>
+
+  <!-- SCENE 2: THE QUESTION -->
+  <div class="scene" data-duration="6500">
+    <div class="content enter">
+      <div class="tag">CHAPTER 01 — THE QUESTION</div>
+      <h2 class="title">Let's ask it<br>something simple.</h2>
+      <p class="subtitle">Something that shouldn't be complicated.</p>
+    </div>
+    <div class="character person wave">
+      <div class="hair"></div><div class="head"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div>
+      <div class="body"></div><div class="arm left"></div><div class="arm right"></div><div class="leg left"></div><div class="leg right"></div>
+    </div>
+    <div class="question pop">?</div>
+    <div class="bubble top enter">Hey AI! What does a good leader look like?</div>
+    <div class="caption">A harmless question. What could possibly go wrong?</div>
+  </div>
+
+  <!-- SCENE 3: THE ANSWER -->
+  <div class="scene" data-duration="7500">
+    <div class="content enter">
+      <div class="tag">CHAPTER 02 — THE ANSWER</div>
+      <h2 class="title">And the AI<br>has an answer.</h2>
+    </div>
+    <div class="robot">
+      <div class="antenna"></div>
+      <div class="robot-head"><div class="robot-eye one"></div><div class="robot-eye two"></div><div class="robot-mouth"></div></div>
+      <div class="robot-body"></div><div class="robot-arm a"></div><div class="robot-arm b"></div>
+    </div>
+    <div class="floating-word word1">CONFIDENT</div>
+    <div class="floating-word word2">MALE?</div>
+    <div class="floating-word word3">AUTHORITATIVE</div>
+    <div class="bubble robot-bubble enter">A strong, confident man in a suit, of course!</div>
+    <div class="caption">Wait. Why did it assume a leader had to be a man?</div>
+  </div>
+
+  <!-- SCENE 4: THE BIAS -->
+  <div class="scene" data-duration="7500">
+    <div class="content enter">
+      <div class="tag">CHAPTER 03 — THE HIDDEN PATTERN</div>
+      <h2 class="title">AI doesn't<br>learn in a vacuum.</h2>
+      <p class="subtitle">It learns from information created by people.</p>
+    </div>
+    <div class="loop">HUMAN DATA<br><span class="highlight">↓</span><br>AI OUTPUT<br><span class="pink">↓</span><br>HUMAN BELIEFS</div>
+    <div class="caption">If the data contains stereotypes, AI can learn and repeat them.</div>
+  </div>
+
+  <!-- SCENE 5: RESEARCH -->
+  <div class="scene" data-duration="8500">
+    <div class="content enter">
+      <div class="tag">CHAPTER 04 — THE EVIDENCE</div>
+      <h2 class="title">This isn't<br>just a theory.</h2>
+      <p class="subtitle">Researchers have documented these patterns.</p>
+    </div>
+    <div style="position:absolute;right:9%;top:23%;width:43%;z-index:3">
+      <div style="font:700 clamp(48px,8vw,90px) 'Space Grotesk';color:var(--purple)">20%</div>
+      <p style="font-size:clamp(12px,1.5vw,17px);line-height:1.5;margin:5px 0 25px">of tested sentence completions about women by Llama 2 contained sexist or misogynistic content.</p>
+      <div style="font:700 clamp(48px,8vw,90px) 'Space Grotesk';color:#e45b89">70%</div>
+      <p style="font-size:clamp(12px,1.5vw,17px);line-height:1.5">of tested outputs about gay individuals by Llama 2 were negative.</p>
+    </div>
+    <div class="caption">UNESCO (2024). Results from specific experiments — not universal AI error rates.</div>
+  </div>
+
+  <!-- SCENE 6: THE LOOP -->
+  <div class="scene" data-duration="7500">
+    <div class="content enter">
+      <div class="tag">CHAPTER 05 — THE FEEDBACK LOOP</div>
+      <h2 class="title">And then<br>something worse happens.</h2>
+    </div>
+    <div class="loop" style="top:30%">
+      WE CREATE AI<br>
+      <span class="highlight">↓</span><br>
+      AI REPEATS OUR BIASES<br>
+      <span class="pink">↓</span><br>
+      WE START ACCEPTING THEM<br>
+      <span class="highlight">↺</span>
+    </div>
+    <div class="caption">The output can reinforce the very assumptions that shaped it.</div>
+  </div>
+
+  <!-- SCENE 7: RESPONSIBILITY -->
+  <div class="scene" data-duration="7500">
+    <div class="content center enter">
+      <div class="tag">CHAPTER 06 — OUR RESPONSIBILITY</div>
+      <h2 class="title">But here's<br>the thing.</h2>
+      <p class="subtitle">AI didn't build itself. We did.</p>
+    </div>
+    <div class="character person" style="left:19%">
+      <div class="hair"></div><div class="head"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div>
+      <div class="body"></div><div class="arm left"></div><div class="arm right"></div><div class="leg left"></div><div class="leg right"></div>
+    </div>
+    <div class="robot" style="right:20%">
+      <div class="antenna"></div>
+      <div class="robot-head"><div class="robot-eye one"></div><div class="robot-eye two"></div><div class="robot-mouth"></div></div>
+      <div class="robot-body"></div><div class="robot-arm a"></div><div class="robot-arm b"></div>
+    </div>
+    <div class="caption">Creators. Developers. Companies. Users. <strong>We all have a role.</strong></div>
+  </div>
+
+  <!-- SCENE 8: ENDING -->
+  <div class="scene" data-duration="9000">
+    <div class="content center enter" style="top:23%">
+      <div class="tag">THE FINAL REFLECTION</div>
+      <h1 class="title">AI reflects<br>the world <span class="gradient-text">we build.</span></h1>
+      <p class="subtitle">And changing that reflection starts with us.</p>
+    </div>
+    <div class="mirror pop">
+      <div class="mirror-face"></div>
+    </div>
+    <div class="caption">We are the creators. We are the users. We are responsible.</div>
+  </div>
+
+</div>
+
+<div class="controls">
+  <button id="play">Ⅱ Pause</button>
+  <div id="progress"><div id="bar"></div></div>
+  <span id="counter">01 / 08</span>
+  <button id="replay">↻ Replay</button>
+</div>
+
+<script>
+const scenes = [...document.querySelectorAll('.scene')];
+const bar = document.getElementById('bar');
+const counter = document.getElementById('counter');
+const playButton = document.getElementById('play');
+let current = 0;
+let elapsed = 0;
+let playing = true;
+let lastTime = performance.now();
+let finished = false;
+
+function showScene(index) {
+  scenes.forEach((scene, i) => scene.classList.toggle('active', i === index));
+  counter.textContent = `${String(index + 1).padStart(2,'0')} / ${String(scenes.length).padStart(2,'0')}`;
+  elapsed = 0;
+  finished = false;
+  lastTime = performance.now();
+}
+
+function totalDuration() {
+  return scenes.reduce((sum, scene) => sum + Number(scene.dataset.duration), 0);
+}
+
+function update(now) {
+  const delta = now - lastTime;
+  lastTime = now;
+
+  if (playing && !finished) {
+    elapsed += delta;
+    const duration = Number(scenes[current].dataset.duration);
+
+    if (elapsed >= duration) {
+      if (current < scenes.length - 1) {
+        current++;
+        showScene(current);
+      } else {
+        finished = true;
+        playing = false;
+        playButton.textContent = '▶ Play';
+      }
+    }
+
+    const completed = scenes.slice(0,current).reduce((sum,scene) => sum + Number(scene.dataset.duration),0);
+    const progress = (completed + Math.min(elapsed, Number(scenes[current].dataset.duration))) / totalDuration();
+    bar.style.width = `${Math.min(100,progress * 100)}%`;
+  }
+  requestAnimationFrame(update);
+}
+
+playButton.addEventListener('click', () => {
+  if (finished) {
+    current = 0;
+    showScene(0);
+    playing = true;
+    playButton.textContent = 'Ⅱ Pause';
+    bar.style.width = '0%';
+    return;
+  }
+  playing = !playing;
+  playButton.textContent = playing ? 'Ⅱ Pause' : '▶ Play';
+  lastTime = performance.now();
+});
+
+document.getElementById('replay').addEventListener('click', () => {
+  current = 0;
+  showScene(0);
+  playing = true;
+  playButton.textContent = 'Ⅱ Pause';
+  bar.style.width = '0%';
+});
+
+requestAnimationFrame(update);
+</script>
+</body>
+</html>
